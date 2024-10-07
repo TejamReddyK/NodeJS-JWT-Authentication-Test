@@ -103,6 +103,22 @@
             }
         }
 
+        // Function to check if the token is expired
+        function isTokenExpired(token) {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            return payload.exp < Date.now() / 1000;
+        }
+
+        // Function to check token and load the page accordingly
+        function checkTokenBeforeLoad() {
+            const token = localStorage.getItem('jwt');
+            if (!token || isTokenExpired(token)) {
+                alert('Session expired. Redirecting to login...');
+                localStorage.removeItem('jwt');
+                window.location.href = '/';
+            }
+        }
+
         // Handle back/forward navigation
         window.onpopstate = function(event) {
             if (event.state) {
@@ -113,6 +129,15 @@
                 }
             }
         };
+
+        // Trigger token check and page load based on the current URL
+        if (window.location.pathname === '/dashboard') {
+            checkTokenBeforeLoad();
+            getDashboard();
+        } else if (window.location.pathname === '/settings') {
+            checkTokenBeforeLoad();
+            getSettings();
+        }
    </script>
 </body>
 </html>

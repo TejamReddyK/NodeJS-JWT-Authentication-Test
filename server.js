@@ -5,11 +5,13 @@ const exjwt = require('express-jwt');
 const bodyParser = require('body-parser');
 const path = require('path');
 
+// Enable CORS for frontend (adjust this to your frontend URL)
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
     res.setHeader('Access-Control-Allow-Headers', 'Content-type,Authorization');
     next();
 });
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -20,6 +22,7 @@ const jwtMW = exjwt({
     algorithms: ['HS256']
 });
 
+// Dummy users for login
 let users = [
     {
         id: 1,
@@ -45,7 +48,7 @@ app.post('/api/login', (req, res) => {
                 err: null,
                 token
             });
-            return; // Exit the loop once token is created
+            return;
         }
     }
     res.status(401).json({
@@ -71,14 +74,17 @@ app.get('/api/settings', jwtMW, (req, res) => {
     });
 });
 
-// Default route
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+// Serve index.html for protected routes on reload
+app.get(['/dashboard', '/settings'], (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));  // Adjusted path to serve index.html correctly
 });
 
-// Serve favicon.ico (optional)
-app.get('/favicon.ico', (req, res) => {
-    res.sendFile(path.join(__dirname, 'favicon.ico'));
+// Serve static files from jwt directory
+app.use(express.static(path.join(__dirname)));
+
+// Catch-all route for serving index.html for client-side routing
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // Error handling middleware
@@ -94,7 +100,7 @@ app.use(function (err, req, res, next) {
     }
 });
 
-// Server listening
+// Start server
 app.listen(PORT, () => {
-    console.log(`Serving on port ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
